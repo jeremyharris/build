@@ -83,6 +83,8 @@ class BuildTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'scripts.js'));
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'styles.css'));
 
+        $this->assertContains($this->testBuildPath . DS . 'html.html', $this->Build->getBuiltFiles());
+
         $html = file_get_contents($this->testBuildPath . DS . 'html.html');
         $this->assertRegExp('/<html/', $html);
 
@@ -93,6 +95,12 @@ class BuildTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'subdir' . DS . 'article.html'));
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'html.html'));
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'markdown.html'));
+
+        $this->assertNotContains($this->testBuildPath . DS . 'html.html', $this->Build->getBuiltFiles());
+
+        $this->Build->build(true);
+
+        $this->assertContains($this->testBuildPath . DS . 'html.html', $this->Build->getBuiltFiles());
     }
 
     /**

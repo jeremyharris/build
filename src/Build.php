@@ -36,6 +36,13 @@ class Build
     protected $layout = 'layout.php';
 
     /**
+     * List of files that were built
+     *
+     * @var array
+     */
+    protected $builtFiles = [];
+
+    /**
      * Constructor
      *
      * @param string $siteTarget  Site target
@@ -61,6 +68,8 @@ class Build
      */
     public function build($force = false)
     {
+        $this->builtFiles = [];
+
         $webrootPath = self::WEBROOT_PATH . DIRECTORY_SEPARATOR;
         $webroot = $this->getFileTree($this->site . DIRECTORY_SEPARATOR . $webrootPath);
         foreach ($webroot as $file) {
@@ -106,6 +115,7 @@ class Build
         if (!file_exists($directory)) {
             mkdir($directory, 0775, true);
         }
+        $this->builtFiles[] = $buildPath;
         file_put_contents($buildPath, $contents);
     }
 
@@ -200,5 +210,15 @@ class Build
         }
         $buildFile = new \SplFileInfo($this->build . DIRECTORY_SEPARATOR . $buildFilename);
         return $viewFile->getMTime() > $buildFile->getMTime();
+    }
+
+    /**
+     * Gets a list of files that were built
+     *
+     * @return array
+     */
+    public function getBuiltFiles()
+    {
+        return $this->builtFiles;
     }
 }
