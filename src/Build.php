@@ -29,6 +29,13 @@ class Build
     protected $build = null;
 
     /**
+     * Force building all the files
+     *
+     * @var bool
+     */
+    protected $force = false;
+
+    /**
      * Layout to use when rendiner views during build
      *
      * @var string
@@ -57,8 +64,8 @@ class Build
         if (!is_dir($siteTarget)) {
             throw new \Exception(sprintf('%s is not a valid site target', $siteTarget));
         }
-        $this->site = $siteTarget;
-        $this->build = $buildTarget;
+        $this->site = rtrim($siteTarget, DIRECTORY_SEPARATOR);
+        $this->build = rtrim($buildTarget, DIRECTORY_SEPARATOR);
     }
 
     /**
@@ -68,55 +75,66 @@ class Build
      */
     public function build($force = false)
     {
-        $this->builtFiles = [];
+        $this->force = $force;
 
         $webrootPath = self::WEBROOT_PATH . DIRECTORY_SEPARATOR;
         $webroot = $this->getFileTree($this->site . DIRECTORY_SEPARATOR . $webrootPath);
         foreach ($webroot as $file) {
-            $contents = file_get_contents($this->site . DIRECTORY_SEPARATOR . $webrootPath . $file);
-            $this->addFileToBuild($file, $contents);
+            $this->addFileToBuild($this->site . DIRECTORY_SEPARATOR . $webrootPath . $file, dirname($file));
         }
 
         $viewPath = self::VIEW_PATH . DIRECTORY_SEPARATOR;
         $views = $this->getFileTree($this->site . DIRECTORY_SEPARATOR . $viewPath);
         foreach ($views as $file) {
-            $viewFile = new \SplFileInfo($file);
-            $newFilename = str_replace($viewFile->getExtension(), 'html', $file);
-            $contents = $this->renderView(new View($this->site . DIRECTORY_SEPARATOR . $viewPath . $file));
-            if ($force || $this->modified($file) === true) {
-                $this->addFileToBuild($newFilename, $contents);
-            }
+            $this->addFileToBuild($this->site . DIRECTORY_SEPARATOR . $viewPath . $file, dirname($file), true);
         }
 
         $jsPath = self::ASSET_PATH . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR;
         $scripts = $this->getFileTree($this->site . DIRECTORY_SEPARATOR . $jsPath);
         array_walk($scripts, [$this, 'prependDirectory'], $jsPath);
         $concatenated = $this->concatFiles($scripts);
-        $this->addFileToBuild('scripts.js', $concatenated);
+        $this->addRawFile('scripts.js', $concatenated);
 
         $cssPath = self::ASSET_PATH . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR;
         $styles = $this->getFileTree($this->site . DIRECTORY_SEPARATOR . $cssPath);
         array_walk($styles, [$this, 'prependDirectory'], $cssPath);
         $concatenated = $this->concatFiles($styles);
-        $this->addFileToBuild('styles.css', $concatenated);
+        $this->addRawFile('styles.css', $concatenated);
     }
 
     /**
      * Adds a file to the build
      *
-     * @param string $filename Relative file path
-     * @param string $contents File contents
+     * @param  string $fullPath Full path to file
+     * @param  bool   $isView   Use View class to render?
      * @return void
      */
-    public function addFileToBuild($filename, $contents)
+    public function addFileToBuild($fullPath, $directory = '.', $isView = false)
     {
-        $buildPath = $this->build . DIRECTORY_SEPARATOR . $filename;
-        $directory = dirname($buildPath);
-        if (!file_exists($directory)) {
-            mkdir($directory, 0775, true);
+        $fileInfo = new \SplFileInfo($fullPath);
+        $newFilename = $fileInfo->getBasename();
+        $relativeFilepath = str_replace($this->site . DIRECTORY_SEPARATOR, '', $fullPath);
+
+        $directory = trim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if ($directory === './' || $directory === DIRECTORY_SEPARATOR) {
+            $directory = null;
         }
-        $this->builtFiles[] = $buildPath;
-        file_put_contents($buildPath, $contents);
+
+        if ($isView) {
+            $newFilename = $fileInfo->getBasename($fileInfo->getExtension()) . 'html';
+        }
+
+        if (!$this->force && !$this->modified($relativeFilepath, $directory . $newFilename)) {
+            return;
+        }
+
+        if ($isView) {
+            $contents = $this->renderView(new View($fullPath));
+        } else {
+            $contents = file_get_contents($fullPath);
+        }
+
+        $this->addRawFile($directory . $newFilename, $contents);
     }
 
     /**
@@ -195,21 +213,23 @@ class Build
     }
 
     /**
-     * Checks if a view file has been modified
+     * Checks if a file has been modified or built
      *
-     * @param string $filename Path to view file
+     * @param  string $siteFilepath  Relative path to original site file
+     * @param  string $buildFilepath Relative path to file that will be built
      * @return bool
      */
-    public function modified($filename)
+    public function modified($siteFilepath, $buildFilepath)
     {
-        $viewPath = $this->site . DIRECTORY_SEPARATOR . self::VIEW_PATH . DIRECTORY_SEPARATOR;
-        $viewFile = new \SplFileInfo($viewPath . $filename);
-        $buildFilename = str_replace($viewFile->getExtension(), 'html', $filename);
-        if (!file_exists($this->build . DIRECTORY_SEPARATOR . $buildFilename)) {
+        $siteFilepath = $this->site . DIRECTORY_SEPARATOR . $siteFilepath;
+        $buildFilepath = $this->build . DIRECTORY_SEPARATOR . $buildFilepath;
+
+        if (!file_exists($buildFilepath)) {
             return true;
         }
-        $buildFile = new \SplFileInfo($this->build . DIRECTORY_SEPARATOR . $buildFilename);
-        return $viewFile->getMTime() > $buildFile->getMTime();
+        $siteFile = new \SplFileInfo($siteFilepath);
+        $buildFile = new \SplFileInfo($buildFilepath);
+        return $siteFile->getMTime() > $buildFile->getMTime();
     }
 
     /**
@@ -220,5 +240,32 @@ class Build
     public function getBuiltFiles()
     {
         return $this->builtFiles;
+    }
+
+    /**
+     * Resets the build
+     *
+     * @return void
+     */
+    public function reset()
+    {
+        $this->builtFiles = [];
+    }
+
+    /**
+     * Adds a file to the build
+     *
+     * @param string $filepath Relative filepath (build file name)
+     * @param string $contents File contents
+     */
+    protected function addRawFile($filepath, $contents)
+    {
+        $buildPath = $this->build . DIRECTORY_SEPARATOR . $filepath;
+        $directory = dirname($buildPath);
+        if (!file_exists($directory)) {
+            mkdir($directory, 0775, true);
+        }
+        $this->builtFiles[] = $buildPath;
+        file_put_contents($buildPath, $contents);
     }
 }

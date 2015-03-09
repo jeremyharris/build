@@ -89,6 +89,7 @@ class BuildTest extends \PHPUnit_Framework_TestCase
         $this->assertRegExp('/<html/', $html);
 
         $this->Build->useLayout('missing');
+        $this->Build->reset();
         $this->Build->build();
 
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'subdir'));
@@ -98,6 +99,7 @@ class BuildTest extends \PHPUnit_Framework_TestCase
 
         $this->assertNotContains($this->testBuildPath . DS . 'html.html', $this->Build->getBuiltFiles());
 
+        $this->Build->reset();
         $this->Build->build(true);
 
         $this->assertContains($this->testBuildPath . DS . 'html.html', $this->Build->getBuiltFiles());
