@@ -6,10 +6,16 @@ Status](https://travis-ci.org/jeremyharris/build.svg?branch=master)](https://tra
 A little static site generator, built specifically to build little sites with
 blog posts.
 
+## Installation
+
+`composer require jeremyharris/build`
+
 ## Features
 
 - Stupid dumb easy setup (no config files)
 - Concatenates assets
+- Builds only modified files
+- Some tools for basic blog functionality
 - Flexible-ish
 
 ## Usage
@@ -86,3 +92,7 @@ build
 |_ contact.html
 |_ robots.txt
 ```
+
+## Example site
+
+- [https://github.com/jeremyharris/someguyjeremy](someguyjeremy.com)
