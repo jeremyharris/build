@@ -90,12 +90,17 @@ class BuildTest extends \PHPUnit_Framework_TestCase
 
         $this->Build->useLayout('missing');
         $this->Build->reset();
+        $this->Build->addFileToBuild(__FILE__);
+        $this->Build->addFileToBuild(__FILE__, '/custom/dir');
         $this->Build->build();
+        $expectedBasename = basename(__FILE__);
 
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'subdir'));
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'subdir' . DS . 'article.html'));
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'html.html'));
         $this->assertTrue(file_exists($this->testBuildPath . DS . 'markdown.html'));
+        $this->assertTrue(file_exists($this->testBuildPath . DS . $expectedBasename));
+        $this->assertTrue(file_exists($this->testBuildPath . DS . 'custom' . DS . 'dir' . DS . $expectedBasename));
 
         $this->assertNotContains($this->testBuildPath . DS . 'html.html', $this->Build->getBuiltFiles());
 
