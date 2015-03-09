@@ -25,6 +25,28 @@ $build = new \JeremyHarris\Build\Build('/path/to/site_target', 'path/to/build_ta
 $build->build();
 ```
 
+Only files that have been modified since you last built will be built. You can
+optionally pass `true` to `build()` to force build all files. You can then get
+full paths to newly built files:
+
+```php
+$newlyBuiltFiles = $build->getBuiltFiles();
+// now deploy them!
+```
+
+If you want to manually add build files that aren't within the expected structure,
+you can do so:
+
+```php
+// add a file to the build root
+$build->addFileToBuild('/full/path/to/file.html');
+// add a file to a new directory within the build
+$build->addFileToBuild('/full/path/to/file.html', 'some/directory');
+// render a file as a view (wrap it in the layout)
+$build->addFileToBuild('/path/to/my.php', 'some/directory', true);
+$build->addFileToBuild('/path/to/my.md', '/', true);
+```
+
 ## Blogging
 
 Some blogging functionality is provided in the `\JeremyHarris\Build\Blog` class.
