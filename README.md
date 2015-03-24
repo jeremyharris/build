@@ -117,4 +117,4 @@ build
 
 ## Example site
 
-- [https://github.com/jeremyharris/someguyjeremy](someguyjeremy.com)
+- [someguyjeremy.com](https://github.com/jeremyharris/someguyjeremy)

@@ -110,6 +110,6 @@ class View
     public function getTitle()
     {
         $file = new \SplFileInfo($this->filename);
-        return Application::slugToTitle($file->getBasename($file->getExtension()));
+        return Application::slugToTitle($file->getBasename('.' . $file->getExtension()));
     }
 }
