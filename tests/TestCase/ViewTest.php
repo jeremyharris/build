@@ -110,4 +110,22 @@ class ViewTest extends \PHPUnit_Framework_TestCase
         $mdView = new View(TEST_APP . DS . 'views' . DS . 'markdown.md');
         $this->assertTrue($mdView->isMarkdown());
     }
+
+    /**
+     * testGetTitle
+     *
+     * @return void
+     */
+    public function testGetTitle()
+    {
+        $view = new View(TEST_APP . DS . 'views' . DS . 'markdown.md');
+
+        $result = $view->getTitle();
+        $this->assertEquals('Markdown', $result);
+
+        $view = new View(TEST_APP . DS . 'views' . DS . '2013' . DS . '05' . DS . 'my-may-post.md');
+
+        $result = $view->getTitle();
+        $this->assertEquals('My May Post', $result);
+    }
 }
