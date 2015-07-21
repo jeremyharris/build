@@ -128,4 +128,17 @@ class ViewTest extends \PHPUnit_Framework_TestCase
         $result = $view->getTitle();
         $this->assertEquals('My May Post', $result);
     }
+
+    /**
+     * testGetViewTitle
+     *
+     * @return void
+     */
+    public function testGetViewTitle()
+    {
+        $view = new View(TEST_APP . DS . 'views' . DS . 'html.php');
+
+        $result = $view->getTitle();
+        $this->assertEquals('View Title', $result);
+    }
 }

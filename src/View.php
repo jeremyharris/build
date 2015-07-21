@@ -109,7 +109,12 @@ class View
      */
     public function getTitle()
     {
-        $file = new \SplFileInfo($this->filename);
-        return Application::slugToTitle($file->getBasename('.' . $file->getExtension()));
+        try {
+            $this->render();
+            return $this->get('title');
+        } catch (\OutOfBoundsException $ex) {
+            $file = new \SplFileInfo($this->filename);
+            return Application::slugToTitle($file->getBasename('.' . $file->getExtension()));
+        }
     }
 }
