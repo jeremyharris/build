@@ -1,2 +1,2 @@
-<?php $this->set('title', 'View Title'); ?>
+<?php $this->layout('layouts::default.php', ['title' => 'View Title']); ?>
 <span><?php echo isset($test) ? $test : ''; ?></span>

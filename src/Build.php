@@ -3,6 +3,7 @@
 namespace JeremyHarris\Build;
 
 use JeremyHarris\Build\View;
+use JeremyHarris\Build\Template\Engine;
 
 /**
  * Simple build class
@@ -11,6 +12,7 @@ class Build
 {
 
     const VIEW_PATH = 'views';
+    const LAYOUT_PATH = 'layouts';
     const ASSET_PATH = 'assets';
     const WEBROOT_PATH = 'webroot';
 
@@ -40,7 +42,7 @@ class Build
      *
      * @var string
      */
-    protected $layout = 'layout.php';
+    protected $layout = 'default.php';
 
     /**
      * List of files that were built
@@ -66,6 +68,8 @@ class Build
         }
         $this->site = rtrim($siteTarget, DIRECTORY_SEPARATOR);
         $this->build = rtrim($buildTarget, DIRECTORY_SEPARATOR);
+        $this->engine = new Engine($this->site . DIRECTORY_SEPARATOR . self::VIEW_PATH);
+        $this->engine->addFolder(self::LAYOUT_PATH, $this->site . DIRECTORY_SEPARATOR . self::LAYOUT_PATH);
     }
 
     /**
@@ -129,7 +133,7 @@ class Build
         }
 
         if ($isView) {
-            $contents = $this->renderView(new View($fullPath));
+            $contents = $this->renderView(new View($fullPath, $this->engine));
         } else {
             $contents = file_get_contents($fullPath);
         }
@@ -146,15 +150,9 @@ class Build
      */
     public function renderView(View $view)
     {
-        $viewContents = $view->render();
-        try {
-            $layout = new View($this->site . DIRECTORY_SEPARATOR . $this->layout);
-            $layout->set('title', $view->getTitle());
-            $layout->set('content', $viewContents);
-            $viewContents = $layout->render();
-        } catch (\Exception $e) {
-        }
-        return $viewContents;
+        return $view->render(self::LAYOUT_PATH . '::' .$this->layout, [
+            'title' => $view->getTitle()
+        ]);
     }
 
     /**
@@ -187,16 +185,6 @@ class Build
             $concatenated .= file_get_contents($this->site . DIRECTORY_SEPARATOR . $path) . PHP_EOL;
         }
         return $concatenated;
-    }
-
-    /**
-     * Sets the layout to use
-     *
-     * @param string $layout Relative path to layout
-     */
-    public function useLayout($layout)
-    {
-        $this->layout = $layout;
     }
 
     /**

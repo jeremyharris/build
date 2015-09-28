@@ -16,13 +16,6 @@ class View
 {
 
     /**
-     * Array of view vars to be passed to the view on render
-     *
-     * @var array
-     */
-    protected $vars = [];
-
-    /**
      * The view filepath
      *
      * @var SplFileInfo
@@ -30,65 +23,67 @@ class View
     protected $file = null;
 
     /**
+     * Template engine
+     *
+     * @var \League\Plates\Engine
+     */
+    protected $engine;
+
+    /**
      * Constructor
      *
      * @param string $filename Full path to view file
      * @throws \Exception
      */
-    public function __construct($filename)
+    public function __construct($filename, $engine)
     {
         if (!file_exists($filename)) {
             throw new \Exception(sprintf('%s does not exist', $filename));
         }
         $this->file = new SplFileInfo($filename);
-    }
 
-    /**
-     * Set a var for the view
-     *
-     * @param string $var Var name
-     * @param mixed $value Value
-     * @return void
-     */
-    public function set($var, $value)
-    {
-        $this->vars[$var] = $value;
-    }
-
-    /**
-     * Gets a previously set view var
-     *
-     * @param string $var Var name
-     * @return mixed The value
-     * @throws \OutOfBoundsException
-     */
-    public function get($var)
-    {
-        if (!array_key_exists($var, $this->vars)) {
-            throw new \OutOfBoundsException(sprintf('%s has not been set', $var));
-        }
-        return $this->vars[$var];
+        $this->engine = $engine;
+        $this->engine->setFileExtension(null);
+        $this->engine->setDirectory($this->file->getPath());
     }
 
     /**
      * Returns rendered view
      *
+     * @param string $layout Layout name
+     * @param array $data Data
      * @return string
      */
-    public function render()
+    public function render($layout, $data = [])
     {
+        $contents = null;
+
         if ($this->isMarkdown()) {
             $environment = Environment::createCommonMarkEnvironment();
             $environment->addInlineParser(new TwitterHandleParser());
             $parser = new DocParser($environment);
             $htmlRenderer = new HtmlRenderer($environment);
             $document = $parser->parse(file_get_contents($this->file->getRealPath()));
-            return $htmlRenderer->renderBlock($document);
+            $contents = $htmlRenderer->renderBlock($document);
         }
-        ob_start();
-        extract($this->vars);
-        require $this->file->getRealPath();
-        return ob_get_clean();
+
+        if (!$this->isPhp()) {
+            $contents = file_get_contents($this->file->getRealPath());
+        }
+
+        $layoutData = [
+            'title' => $this->getTitle()
+        ];
+
+        if (!empty($contents)) {
+            $layoutData += [
+                'content' => $contents
+            ];
+        }
+
+        $template = $this->engine->make($this->file->getBasename());
+        $template->layout($layout, $layoutData);
+        return $template->render($data);
     }
 
     /**
@@ -104,17 +99,22 @@ class View
     }
 
     /**
+     * Returns true if this is a PHP file that should be rendered using Plates
+     *
+     * @return bool
+     */
+    public function isPhp()
+    {
+        return $this->file->getExtension() === 'php';
+    }
+
+    /**
      * Gets title based on the view slug
      *
      * @return string
      */
     public function getTitle()
     {
-        try {
-            $this->render();
-            return $this->get('title');
-        } catch (\OutOfBoundsException $ex) {
-            return Application::slugToTitle($this->file->getBasename('.' . $this->file->getExtension()));
-        }
+        return Application::slugToTitle($this->file->getBasename('.' . $this->file->getExtension()));
     }
 }

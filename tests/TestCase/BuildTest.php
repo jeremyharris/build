@@ -88,7 +88,6 @@ class BuildTest extends \PHPUnit_Framework_TestCase
         $html = file_get_contents($this->testBuildPath . DS . 'html.html');
         $this->assertRegExp('/<html/', $html);
 
-        $this->Build->useLayout('missing');
         $this->Build->reset();
         $this->Build->addFileToBuild(__FILE__);
         $this->Build->addFileToBuild(__FILE__, '/custom/dir');
