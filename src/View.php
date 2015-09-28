@@ -7,6 +7,7 @@ use JeremyHarris\Build\Parser\TwitterHandleParser;
 use League\CommonMark\Environment;
 use League\CommonMark\DocParser;
 use League\CommonMark\HtmlRenderer;
+use SplFileInfo;
 
 /**
  * Simple view class
@@ -24,9 +25,9 @@ class View
     /**
      * The view filepath
      *
-     * @var string
+     * @var SplFileInfo
      */
-    protected $filename = null;
+    protected $file = null;
 
     /**
      * Constructor
@@ -39,7 +40,7 @@ class View
         if (!file_exists($filename)) {
             throw new \Exception(sprintf('%s does not exist', $filename));
         }
-        $this->filename = $filename;
+        $this->file = new SplFileInfo($filename);
     }
 
     /**
@@ -81,12 +82,12 @@ class View
             $environment->addInlineParser(new TwitterHandleParser());
             $parser = new DocParser($environment);
             $htmlRenderer = new HtmlRenderer($environment);
-            $document = $parser->parse(file_get_contents($this->filename));
+            $document = $parser->parse(file_get_contents($this->file->getRealPath()));
             return $htmlRenderer->renderBlock($document);
         }
         ob_start();
         extract($this->vars);
-        require $this->filename;
+        require $this->file->getRealPath();
         return ob_get_clean();
     }
 
@@ -98,7 +99,7 @@ class View
     public function isMarkdown()
     {
         $markdownExts = ['md', 'markdown'];
-        $ext = pathinfo($this->filename, \PATHINFO_EXTENSION);
+        $ext = $this->file->getExtension();
         return in_array($ext, $markdownExts);
     }
 
@@ -113,8 +114,7 @@ class View
             $this->render();
             return $this->get('title');
         } catch (\OutOfBoundsException $ex) {
-            $file = new \SplFileInfo($this->filename);
-            return Application::slugToTitle($file->getBasename('.' . $file->getExtension()));
+            return Application::slugToTitle($this->file->getBasename('.' . $this->file->getExtension()));
         }
     }
 }
