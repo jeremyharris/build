@@ -4,6 +4,7 @@ namespace JeremyHarris\Build;
 
 use JeremyHarris\Build\Application;
 use JeremyHarris\Build\Parser\TwitterHandleParser;
+use JeremyHarris\Build\Blog\Post;
 use League\CommonMark\Environment;
 use League\CommonMark\DocParser;
 use League\CommonMark\HtmlRenderer;
@@ -109,7 +110,26 @@ class View
      */
     public function getTitle()
     {
-        $file = new \SplFileInfo($this->filename);
-        return Application::slugToTitle($file->getBasename('.' . $file->getExtension()));
+        try {
+            $this->render();
+            return $this->get('title');
+        } catch (\OutOfBoundsException $ex) {
+            $file = new \SplFileInfo($this->filename);
+            return Application::slugToTitle($file->getBasename('.' . $file->getExtension()));
+        }
+    }
+
+    /**
+     * Gets the post object, if this view is a post
+     *
+     * @return bool|Post
+     */
+    public function getPost()
+    {
+        try {
+            return new Post(new \SplFileObject($this->filename));
+        } catch (\Exception $ex) {
+            return false;
+        }
     }
 }

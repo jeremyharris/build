@@ -48,6 +48,10 @@ class Post
     {
         $this->source = $post;
 
+        if (!preg_match('/[\d]{4}\/[\d]{2}\/(.+)$/', $post->getPathname())) {
+            throw new \Exception(sprintf('%s is not a valid post', $post->getPathname()));
+        }
+
         $paths = explode(DIRECTORY_SEPARATOR, $post->getPath());
 
         $this->month = $paths[count($paths) - 1];

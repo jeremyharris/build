@@ -38,4 +38,17 @@ class PostTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('post', $Post->slug());
     }
 
+    /**
+     * testInvalidPost
+     *
+     * @expectedException \Exception
+     * @return void
+     */
+    public function testInvalidPost()
+    {
+        $filepath = TEST_APP . DS . 'views' . DS . 'html.php';
+        $file = new \SplFileObject($filepath);
+        new Post($file);
+    }
+
 }
