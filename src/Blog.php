@@ -41,8 +41,11 @@ class Blog
         $iterator = new \RecursiveIteratorIterator($directoryIterator);
 
         foreach ($iterator as $file) {
-            if (!$file->isDir() && preg_match('/[\d]{4}\/[\d]{2}\/(.+)$/', $file->getPathname())) {
-                $this->addPost(new \SplFileObject($file));
+            if (!$file->isDir()) {
+                try {
+                    $this->addPost(new \SplFileObject($file));
+                } catch (\Exception $e) {
+                }
             }
         }
 
