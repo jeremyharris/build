@@ -141,4 +141,23 @@ class ViewTest extends \PHPUnit_Framework_TestCase
         $result = $view->getTitle();
         $this->assertEquals('View Title', $result);
     }
+
+    /**
+     * testGetPost
+     *
+     * @return void
+     */
+    public function testGetPost()
+    {
+        $view = new View(TEST_APP . DS . 'views' . DS . 'html.php');
+
+        $result = $view->getPost();
+        $this->assertFalse($result);
+
+        $view = new View(TEST_APP . DS . 'views' . DS . '2013' . DS . '05' . DS . 'my-may-post.md');
+
+        $result = $view->getPost();
+        $this->assertInstanceOf('\\JeremyHarris\\Build\\Blog\\Post', $result);
+    }
+
 }
