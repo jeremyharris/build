@@ -92,7 +92,7 @@ class Blog
      *
      * @param \SplFileObject $file Post file object
      */
-    protected function addPost(\SplFileObject $file)
+    public function addPost(\SplFileObject $file)
     {
         $post = new Post($file);
         if (!array_key_exists($post->year(), $this->posts)) {
@@ -103,5 +103,4 @@ class Blog
         }
         $this->posts[$post->year()][$post->month()][] = $post;
     }
-
 }
