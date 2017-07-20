@@ -63,6 +63,21 @@ $linkToLatest = $latest->link();
 $latestTitle = $latest->title();
 ```
 
+### RSS
+
+To create an RSS feed, you must tell the builder that you want one and pass
+some required settings that the feed needs in order to generate:
+
+```php
+$build = new \JeremyHarris\Build\Build('/path/to/site_target', 'path/to/build_target');
+$build->addRss('My Blog', 'https://example.com', 'Description of site');
+$build->build();
+```
+
+The generator will then automatically create a basic RSS feed for you. The file
+will be in the root of your built site. Only the last 20 blog posts will be
+included in the feed.
+
 ## Site target structure
 
 The site target should have a layout like the one below. Anything in `/webroot`
@@ -110,10 +125,13 @@ build
 |
 |_ styles.css
 |_ scripts.js
+|- rss.xml
 |_ about.html
 |_ contact.html
 |_ robots.txt
 ```
+
+Note `rss.xml` will only exist if you added an RSS feed before build.
 
 ## Example site
 

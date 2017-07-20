@@ -66,7 +66,19 @@ class Post
      */
     public function link()
     {
-        return "<a href=\"/$this->year/$this->month/$this->slug.html\">" . $this->title() . "</a>";
+        $url = $this->url();
+        $title = $this->title();
+        return "<a href=\"$url\">$title</a>";
+    }
+
+    /**
+     * Gets the URL to the post, starting with /
+     *
+     * @return string
+     */
+    public function url()
+    {
+        return "/$this->year/$this->month/$this->slug.html";
     }
 
     /**

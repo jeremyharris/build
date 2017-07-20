@@ -103,6 +103,28 @@ class Build
     }
 
     /**
+     * Adds an RSS feed using blog views as RSS items
+     *
+     * @param string $title Name of feed
+     * @param string $link Link to site, used for generating <item> links too
+     * @param string $description Description of feed
+     * @return void
+     * @see http://cyber.harvard.edu/rss/rss.html
+     */
+    public function addRss($title, $link, $description)
+    {
+        $Rss = new Blog\RssFeed();
+        $Rss
+            ->setTitle($title)
+            ->setLink($link)
+            ->setDescription($description);
+
+        $xml = $Rss->build($this->site, $this->build);
+
+        $this->addRawFile('rss.xml', $xml->asXml());
+    }
+
+    /**
      * Adds a file to the build
      *
      * @param  string $fullPath Full path to file
