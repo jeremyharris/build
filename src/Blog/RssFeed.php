@@ -80,20 +80,17 @@ class RssFeed
         $linkPrefix = rtrim($this->link, '/');
         foreach ($posts as $post) {
             $postFile = $post->source();
-            $mtime = (new DateTime())->setTimestamp($postFile->getMTime());
+            $mTimeDate = (new DateTime())->setTimestamp($postFile->getMTime());
 
             $title = $post->title();
-            $pubDate = (new DateTime)
-                ->setTime(0, 0, 0)
-                ->setDate($post->year(), $post->month(), date('j', $mtime->format('j')))
-                ->format(DATE_RFC2822);
+            $pubDate = $mTimeDate->setDate($post->year(), $post->month(), $mTimeDate->format('j'));
             $link = $linkPrefix . $post->url();
 
             $item = $channel->addChild('item');
             $item->addChild('title', htmlspecialchars($title));
             $item->addChild('link', $link);
             $item->addChild('guid', $link);
-            $item->addChild('pubDate', $pubDate);
+            $item->addChild('pubDate', $pubDate->format(DATE_RFC2822));
         }
 
         return $xml;

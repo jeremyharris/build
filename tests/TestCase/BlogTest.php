@@ -2,6 +2,7 @@
 namespace JeremyHarris\Build\Test\TestCase;
 
 use JeremyHarris\Build\Blog;
+use JeremyHarris\Build\Blog\Post;
 
 /**
  * Blog test
@@ -53,7 +54,7 @@ class BlogTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $result);
 
         foreach ($posts['2012']['01'] as $post) {
-            $this->assertInstanceOf('\\JeremyHarris\\Build\\Blog\\Post', $post);
+            $this->assertInstanceOf(Post::class, $post);
         }
     }
 
@@ -64,26 +65,8 @@ class BlogTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetLatest()
     {
-        $posts = $this->Blog->getPosts();
-
-        $mayPosts = $posts['2013']['05'];
-
-        foreach ($mayPosts as $post) {
-            touch($post->source()->getRealpath());
-        }
-
-        touch($mayPosts[0]->source()->getRealpath(), strtotime('+1 day'));
-
         $result = $this->Blog->getLatest();
-        $this->assertInstanceOf('\\JeremyHarris\\Build\\Blog\\Post', $result);
-        $expected = $mayPosts[0];
-        $this->assertEquals($expected, $result);
-
-        touch($mayPosts[1]->source()->getRealpath(), strtotime('+2 day'));
-
-        $result = $this->Blog->getLatest();
-        $expected = $mayPosts[1];
-        $this->assertEquals($expected, $result);
+        $this->assertInstanceOf(Post::class, $result);
+        $this->assertSame('most-recent', $result->slug());
     }
-
 }
